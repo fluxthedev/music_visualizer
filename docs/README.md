@@ -12,7 +12,61 @@ visualizers might look like when visualizing the same sound.
 <img width="400" height="200" src="example1.png"> <img width="400" height="200" src="example4.png"> <img width="400" height="200" src="example7.PNG">
 <img width="400" height="200" src="example2.png"> <img width="400" height="200" src="example5.png"> <img width="400" height="200" src="example8.PNG">
 
+# Building
+
+First get the sources:
+```
+git clone --recursive https://github.com/xdaimon/music_visualizer.git
+```
+Then to build on Ubuntu with gcc version >= 5.5:
+```
+sudo apt install cmake libglfw3-dev libglew-dev libpulse-dev
+cd music_visualizer
+mkdir build
+mkdir build_result
+cd build
+cmake ..
+&& make -j4
+&& mv main ../build_result/music_visualizer
+&& cp -r ../src/shaders ../build_result/shaders
+```
+And on Windows 10 with Visual Studio 2017:
+```
+build the x64 Release configuration
+```
+**Note for Windows users:** Ensure you have the "Desktop development with C++" workload installed in Visual Studio. The `libs_win` directory in the repository contains pre-built libraries for Windows, which should simplify dependency management for GLEW and GLFW.
+
+# Quick Start
+
+After successfully building the project, you will find the executable (e.g., `music_visualizer` on Linux or `music_visualizer.exe` on Windows) in the `build_result` directory.
+
+The build process also copies a default set of shaders into a `shaders` subdirectory within `build_result` (i.e., `build_result/shaders`).
+
+To run the visualizer with the default shaders:
+1. Navigate to the `build_result` directory.
+   ```bash
+   cd build_result
+   ```
+2. Execute the program:
+   - On Linux: `./music_visualizer`
+   - On Windows: `music_visualizer.exe`
+
+This will load the shaders from the `build_result/shaders` directory.
+
+To run the visualizer with a specific shader set (for example, the `retrowave` shaders located in `shaders/retrowave`):
+1. Navigate to the `build_result` directory.
+   ```bash
+   cd build_result
+   ```
+2. Run the executable with the path to the desired shader directory as an argument:
+   ```bash
+   ./music_visualizer shaders/retrowave 
+   ```
+   (Use `music_visualizer.exe` on Windows)
+
 # Usage
+
+If you want to go beyond running pre-existing shaders and start creating or modifying your own, this section explains how the shader system works.
 
 The user writes a .frag file that renders to a window sized quad. If the user wants multipass buffers, then multiple .frag files should be written. When a frag file is saved the app automatically reloads the changes. If the frag file compiles correctly, then the changes are presented to the user otherwise the app ignores the changes.
 
@@ -22,15 +76,22 @@ Every shader must contain an image.frag file, just like shadertoy.
 
 Buffers are rendered in alphabetical order and image.frag is always rendered last. If two buffers have the same name but different case, such as A.frag and a.frag, then the render order is unspecified. Do not use non ascii characters in file names ( I use tolower in the code to alphabetize the buffer file list ).
 
-Code for a shader should be located in a folder named shaders that is in the same directory as the executable. Subdirectories of shaders/ can also contain code but that code will not be considered a part of the currently rendered shader.
+When creating new shaders, you should typically do so within the `build_result/shaders/` directory. Create a new subdirectory for your custom shader (e.g., `build_result/shaders/my_custom_shader/`) and place your `.frag` files there. Subdirectories of the currently active shader path (e.g., `build_result/shaders/my_custom_shader/some_other_folder/`) will not be considered part of the currently rendered shader.
 
-A shadertoy like shader might have the following folder layout
+A typical folder layout for a custom shader might look like this:
 
-	shader_viewer.exe
-	shaders/
-		image.frag
-		buffA.frag
-		buffB.frag
+```
+build_result/
+    music_visualizer.exe (or ./music_visualizer)
+    shaders/
+        default_shader_files... (e.g., from the initial `cp -r ../src/shaders ../build_result/shaders` step)
+        my_custom_shader/
+            image.frag
+            buffA.frag
+            buffB.frag 
+```
+You would then run this custom shader by navigating to `build_result` and executing:
+`./music_visualizer shaders/my_custom_shader` (or `music_visualizer.exe shaders/my_custom_shader` on Windows).
 
 See [here](/docs/advanced.md) for details on how to configure the rendering process ( clear colors, render size, render order, render same buffer multiple times, geometry shaders, audio system toggle ).
 
@@ -50,40 +111,39 @@ sampler1D iFreqR;    // each element is >= zero for frequency data, you many nee
 sampler1D iFreqL;
 
 // Samplers for your buffers, for example
-sampler2D iMyBuff;
+sampler2D iMyBuff; // if you have MyBuff.frag
 
 // Constant uniforms specified in shader.json, for example
 uniform vec4 color_set_by_script;
 ```
 
-By default, the program uses the shader defined in the `shaders` directory (relative to the current working directory). You can override this by providing a different directory as the first argument, e.g.
-```
-cd build_result
-./music_visualizer shaders/retrowave
-```
+By default, the program uses the shader defined in the `shaders` directory (relative to the current working directory, typically `build_result/shaders/`). You can override this by providing a different directory as the first argument when running the program (as shown in the "Quick Start" and custom shader example above).
 
-# Building
+# Troubleshooting
 
-First get the sources:
-```
-git clone --recursive https://github.com/xdaimon/music_visualizer.git
-```
-Then to build on Ubuntu with gcc version >= 5.5:
-```
-sudo apt install cmake libglfw3-dev libglew-dev libpulse-dev
-cd music_visualizer
-mkdir build
-mkdir build_result
-cd build
-cmake ..
-&& make -j4
-&& mv main ../build_result/music_visualizer
-&& cp -r ../src/shaders ../build_result/shaders
-```
-and on Windows 10 with Visual Studio 2017:
-```
-build the x64 Release configuration
-```
+Here are a few common issues and how to address them:
+
+**Shader Fails to Load/Compile:**
+*   Ensure your `.frag` files are plain text files with correct GLSL (OpenGL Shading Language) syntax.
+*   Check the console output of the `music_visualizer` executable when you run it. Error messages from the shader compiler are printed there and can help pinpoint syntax errors or other issues in your shader code.
+*   Every shader directory must contain an `image.frag` file, which is the final pass rendered to the screen.
+*   Verify that buffer names used in `texture()` calls (e.g., `texture(iBuffA, ...)` ) correctly match the corresponding file names (e.g., `BuffA.frag` results in a sampler named `iBuffA`). Case sensitivity might matter depending on the filesystem.
+
+**No Sound Reactiveness / Audio Input Issues:**
+*   Verify your system's audio input/output settings. The visualizer needs access to an active audio stream.
+*   On Linux, the application often relies on PulseAudio. Ensure PulseAudio is running and correctly configured to capture the desired audio (e.g., monitor of an output device if you want to visualize desktop audio). Tools like `pavucontrol` can help manage PulseAudio settings.
+*   On Windows, ensure the correct recording device is enabled and set as default in your Sound control panel.
+*   The `iSoundL`, `iSoundR` (raw audio) and `iFreqL`, `iFreqR` (frequency data) samplers provide the audio information to your shaders. If shaders are not reacting to sound, try a very simple shader to dump values from these samplers to see if any audio data is coming through.
+
+**Performance Issues:**
+*   Complex shaders, especially those with many passes (multiple `.frag` files), high-resolution buffers, or computationally intensive algorithms, can be demanding on your GPU.
+*   If you experience low frame rates, try simplifying your shaders or reducing the number of buffer passes.
+*   The resolution of render buffers can also impact performance. See the [advanced documentation](/docs/advanced.md) for details on configuring buffer resolution if needed.
+
+**Visuals Don't Update When Shader File is Saved:**
+*   The file watcher should automatically detect changes to `.frag` files in the active shader directory and attempt to reload them.
+*   If this isn't happening, ensure the application has the necessary file system permissions to monitor the shader directory.
+*   Also, ensure you are saving the files in the correct directory that the visualizer is currently watching.
 
 # Contact
 
