@@ -30,11 +30,31 @@ cmake ..
 && mv main ../build_result/music_visualizer
 && cp -r ../src/shaders ../build_result/shaders
 ```
-And on Windows 10 with Visual Studio 2017:
-```
-build the x64 Release configuration
-```
-**Note for Windows users:** Ensure you have the "Desktop development with C++" workload installed in Visual Studio. The `libs_win` directory in the repository contains pre-built libraries for Windows, which should simplify dependency management for GLEW and GLFW.
+And on Windows 10 with Visual Studio (VS 2019 recommended for x64, VS 2017 also suitable):
+
+1.  **Open the Solution:**
+    *   Launch Visual Studio.
+    *   On the start screen, choose "Open a project or solution".
+    *   Navigate to the root directory of the cloned repository and select the `music_visualizer.sln` file. Click "Open".
+
+2.  **Select Build Configuration:**
+    *   Once the project is loaded, look for the toolbar at the top. You should see dropdown menus for "Solution Configurations" and "Solution Platforms".
+    *   Select **Release** from the "Solution Configurations" dropdown.
+    *   Select **x64** from the "Solution Platforms" dropdown.
+
+3.  **Build the Project:**
+    *   In the Visual Studio menu bar, go to **Build > Build Solution**.
+    *   Alternatively, you can press the keyboard shortcut `Ctrl+Shift+B`.
+    *   The build process will compile the project. You can monitor the progress in the "Output" window at the bottom of Visual Studio.
+
+4.  **Locate the Executable and Prepare for Quick Start:**
+    *   After a successful build, the executable `music_visualizer.exe` will typically be located in the `x64/Release` directory inside your solution directory (the main `music_visualizer` folder). For example, if your solution is in `C:\projects\music_visualizer\`, the executable will be in `C:\projects\music_visualizer\x64\Release\`.
+    *   **Important for Quick Start:** The "Quick Start" section and default shader loading behavior expect the executable and shaders to be in a `build_result` directory. To align with this:
+        *   Create a new folder named `build_result` in the root of your repository (e.g., `C:\projects\music_visualizer\build_result\`).
+        *   Copy the compiled `music_visualizer.exe` from `x64/Release/` into the `build_result/` folder.
+        *   Copy the default shaders by copying the entire `src/shaders` directory into your `build_result/` folder (it should become `build_result/shaders`).
+
+**Note for Windows users:** Ensure you have the "Desktop development with C++" workload installed in Visual Studio. Visual Studio 2019 (which uses the v142 toolset for x64) is recommended as it matches the project files, but VS 2017 (v141 toolset) should also work. The great news is that the `libs_win` directory in the repository contains pre-built versions of GLEW and GLFW and the Visual Studio project is already configured to use them. This means you **do not** need to download or configure these libraries separately.
 
 # Quick Start
 
